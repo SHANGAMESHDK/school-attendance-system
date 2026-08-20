@@ -128,7 +128,8 @@ export const SerialProvider = ({ children }) => {
             {
               studentName: student.name,
               parentEmail: student.parentEmail,
-              statusText: statusText
+              statusText: statusText,
+              scanTime: now.toLocaleTimeString()
             },
             import.meta.env.VITE_EMAILJS_PUBLIC_KEY
           ).then((result) => {

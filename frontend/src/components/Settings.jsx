@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import { Save, Clock, Server, Usb, Database, AlertTriangle } from 'lucide-react';
 import { useSerial } from '../context/SerialContext';
 import { db } from '../utils/db';
@@ -25,13 +26,38 @@ const Settings = () => {
     }
   };
 
-  const clearAttendance = () => {
-    if (confirm("Are you sure you want to permanently delete ALL attendance logs?")) {
+  const resetAttendance = async () => {
+    if (confirm("Are you sure you want to close today's attendance? This will send 'absent' emails to all students who did not tap in today, and then clear the logs.")) {
       try {
+        const students = db.getStudents();
+        const logs = db.getAttendance();
+        const today = new Date().toDateString();
+        
+        const absentStudents = students.filter(student => {
+          return !logs.some(log => log.studentUid === student.uid && new Date(log.timestamp).toDateString() === today);
+        });
+
+        for (const student of absentStudents) {
+          if (student.parentEmail) {
+             await emailjs.send(
+              import.meta.env.VITE_EMAILJS_SERVICE_ID,
+              import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+              {
+                studentName: student.name,
+                parentEmail: student.parentEmail,
+                statusText: 'been marked absent',
+                scanTime: new Date().toLocaleTimeString()
+              },
+              import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+            ).catch(err => console.error("Failed to email absent student:", err));
+          }
+        }
+
         db.clearAttendance();
-        alert("Attendance logs cleared.");
+        alert(`Attendance reset! Sent 'absent' emails to ${absentStudents.length} student(s).`);
       } catch (err) {
-        alert("Failed to clear attendance logs.");
+        console.error(err);
+        alert("Failed to reset attendance logs.");
       }
     }
   };
@@ -178,10 +204,10 @@ const Settings = () => {
               <div className="flex gap-4">
                 <button 
                   type="button" 
-                  onClick={clearAttendance} 
+                  onClick={resetAttendance} 
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg transition-colors text-sm font-medium"
                 >
-                  Clear Attendance Logs
+                  Reset Attendance (Send Absent Emails)
                 </button>
                 <button 
                   type="button" 

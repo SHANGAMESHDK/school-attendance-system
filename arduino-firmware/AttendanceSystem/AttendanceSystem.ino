@@ -1,5 +1,4 @@
 #include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
 #include <SPI.h>
 #include <MFRC522.h>
 
@@ -11,7 +10,6 @@
 
 // --- Objects ---
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
-LiquidCrystal_I2C lcd(0x3F, 16, 2); // Set the LCD address to 0x27 for a 16 chars and 2 line display
 
 
 String inputString = "";         // a String to hold incoming data from PC
@@ -23,12 +21,6 @@ void setup() {
   
 
 
-  // Initialize LCD
-  lcd.begin();
-  lcd.backlight();
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("System Initializing");
 
   // Initialize SPI bus and MFRC522
   SPI.begin();
@@ -42,9 +34,6 @@ void setup() {
 
 
   
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Please Tap ID Card");
   Serial.println("READY");
   Serial.println("[INFO] System setup complete. Waiting for RFID scans...");
 }
@@ -88,10 +77,8 @@ void loop() {
   
   Serial.println("[INFO] RFID Card Detected! UID: " + uidString);
 
-  // Show on LCD
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Authenticating..");
+  // Show on Console
+  // Authenticating..
   
   // Send UID to PC
   Serial.println("UID:" + uidString);
@@ -118,17 +105,7 @@ void processPCMessage(String msg) {
       String phone = data.substring(firstComma + 1, secondComma);
       String status = data.substring(secondComma + 1);
       
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Hi " + name.substring(0, 12)); // Max 12 chars
-      lcd.setCursor(0, 1);
-      lcd.print(status);
-      
-
-      
       delay(3000); // Wait 3 seconds
-      lcd.setCursor(0, 0);
-      lcd.print("Please Tap ID Card");
       Serial.println("[INFO] Processed MSG. Back to scan mode.");
     } else {
       Serial.println("[ERROR] Failed to parse MSG: " + msg);
@@ -139,26 +116,12 @@ void processPCMessage(String msg) {
     if (commaIdx > 0) {
       String ssid = data.substring(0, commaIdx);
       String pass = data.substring(commaIdx + 1);
-      
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("WiFi Configured!");
       Serial.println("[INFO] WiFi credentials updated: " + ssid);
       delay(2000);
-      
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Please Tap ID Card");
     }
   } else if (msg.startsWith("UNKNOWN")) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Unknown Card!");
     Serial.println("[INFO] Processed UNKNOWN. Card is unregistered.");
     delay(2000);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Please Tap ID Card");
   } else {
     Serial.println("[WARNING] Unrecognized message from PC: " + msg);
   }
