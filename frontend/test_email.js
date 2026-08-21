@@ -11,8 +11,9 @@
         template_params: {
           studentName: 'Shang',
           parentEmail: 'shangameshdkss@gmail.com',
-          scanTime: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          statusText: 'arrived late'
+          statusText: 'arrived late',
+          rollNo: '01',
+          rfid: '123456789'
         }
       })
     });

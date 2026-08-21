@@ -121,7 +121,7 @@ export const SerialProvider = ({ children }) => {
 
           // Trigger EmailJS Email
           const scanTimeFormatted = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ', ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          const statusText = status === 'ON_TIME' ? 'checked in on time' : 'checked in late';
+          const statusText = status === 'LATE' ? 'arrived late' : 'arrived on time';
 
           emailjs.send(
             import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -129,8 +129,8 @@ export const SerialProvider = ({ children }) => {
             {
               studentName: student.name,
               parentEmail: student.parentEmail,
-              scanTime: scanTimeFormatted,
-              statusText: statusText
+              statusText: statusText,
+              scanTime: scanTimeFormatted
             },
             import.meta.env.VITE_EMAILJS_PUBLIC_KEY
           ).then((result) => {

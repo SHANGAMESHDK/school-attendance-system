@@ -48,8 +48,8 @@ const Settings = () => {
               {
                 studentName: student.name,
                 parentEmail: student.parentEmail,
-                scanTime: scanTimeFormatted,
-                statusText: 'been marked absent'
+                statusText: 'been marked absent',
+                scanTime: scanTimeFormatted
               },
               import.meta.env.VITE_EMAILJS_PUBLIC_KEY
             ).catch(err => console.error("Failed to email absent student:", err));
