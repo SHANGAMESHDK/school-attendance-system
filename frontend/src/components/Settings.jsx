@@ -246,13 +246,3 @@ const Settings = () => {
 };
 
 export default Settings;
-{ isSaving ? 'Saving...' : 'Save Settings' }
-            </button >
-          </div >
-        </form >
-      </div >
-    </div >
-  );
-};
-
-export default Settings;

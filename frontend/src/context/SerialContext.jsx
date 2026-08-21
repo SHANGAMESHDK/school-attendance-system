@@ -204,31 +204,3 @@ export const SerialProvider = ({ children }) => {
     </SerialContext.Provider>
   );
 };
-buffer = lines.pop();
-
-for (let line of lines) {
-  line = line.trim();
-  if (line) {
-    addLog('RX', line);
-    if (line.startsWith('UID:')) {
-      const uid = line.substring(4);
-      handleScan(uid);
-    }
-  }
-}
-        }
-      }
-    } catch (error) {
-  console.error("Serial read error:", error);
-  addLog('ERROR', 'Read error: ' + error.message);
-} finally {
-  disconnect();
-}
-  };
-
-return (
-  <SerialContext.Provider value={{ port, isOpen, connect, disconnect, writeToSerial, serialLogs, setSerialLogs }}>
-    {children}
-  </SerialContext.Provider>
-);
-};
