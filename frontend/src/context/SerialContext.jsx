@@ -122,6 +122,36 @@ export const SerialProvider = ({ children }) => {
           // Trigger EmailJS Email
           const scanTimeFormatted = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ', ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           
+          const emailParams = status === 'ON_TIME' ? {
+            timeLabel: 'SCAN TIME',
+            statusLabel: 'On Time',
+            statusColor: '#1f9d7c',
+            statusIconColor: '#0e2a22',
+            statusIcon: '✓',
+            eyebrowText: 'Scan Confirmed',
+            headerSub: 'Checked in on time',
+            messageVerb: 'has checked in on time at the school gate',
+            noteBg: '#f4f1ea',
+            noteTextColor: '#8a93a8',
+            noteText: 'No action needed — this is just a quick confirmation for your records. Questions about attendance can go to the school administration office anytime.',
+            ctaTextColor: '#ffffff',
+            ctaLabel: 'Contact School Admin →'
+          } : {
+            timeLabel: 'SCAN TIME',
+            statusLabel: 'Late',
+            statusColor: '#e8a33d',
+            statusIconColor: '#151b30',
+            statusIcon: '!',
+            eyebrowText: 'Late Arrival Flagged',
+            headerSub: 'Checked in late',
+            messageVerb: 'has checked in late at the school gate',
+            noteBg: '#f4f1ea',
+            noteTextColor: '#8a93a8',
+            noteText: "Repeated late arrivals can affect your child's attendance record. If there's something we should know, please let the school administration office know.",
+            ctaTextColor: '#151b30',
+            ctaLabel: 'Contact School Admin →'
+          };
+
           emailjs.send(
             import.meta.env.VITE_EMAILJS_SERVICE_ID,
             import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
@@ -129,9 +159,7 @@ export const SerialProvider = ({ children }) => {
               studentName: student.name,
               parentEmail: student.parentEmail,
               scanTime: scanTimeFormatted,
-              isOnTime: status === 'ON_TIME',
-              isLate: status === 'LATE',
-              isAbsent: false
+              ...emailParams
             },
             import.meta.env.VITE_EMAILJS_PUBLIC_KEY
           ).then((result) => {

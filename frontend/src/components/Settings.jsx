@@ -49,9 +49,19 @@ const Settings = () => {
                 studentName: student.name,
                 parentEmail: student.parentEmail,
                 scanTime: scanTimeFormatted,
-                isOnTime: false,
-                isLate: false,
-                isAbsent: true
+                timeLabel: 'RECORDED AT',
+                statusLabel: 'Absent',
+                statusColor: '#c0392b',
+                statusIconColor: '#3a0f0e',
+                statusIcon: '✕',
+                eyebrowText: 'Absence Recorded',
+                headerSub: 'Marked absent today',
+                messageVerb: 'was marked absent — no gate scan was recorded today',
+                noteBg: '#fbe9e7',
+                noteTextColor: '#8a4640',
+                noteText: 'If this is unexpected, please contact the school administration office as soon as possible.',
+                ctaTextColor: '#ffffff',
+                ctaLabel: 'Contact School Admin Now →'
               },
               import.meta.env.VITE_EMAILJS_PUBLIC_KEY
             ).catch(err => console.error("Failed to email absent student:", err));
