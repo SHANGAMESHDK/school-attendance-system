@@ -11,7 +11,7 @@ export const SerialProvider = ({ children }) => {
   const [port, setPort] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [serialLogs, setSerialLogs] = useState([]);
-  
+
   const portRef = useRef(null);
   const writerRef = useRef(null);
   const readerRef = useRef(null);
@@ -26,15 +26,15 @@ export const SerialProvider = ({ children }) => {
         alert("Web Serial API not supported in this browser. Please use Chrome/Edge.");
         return;
       }
-      
+
       const newPort = await navigator.serial.requestPort();
       await newPort.open({ baudRate: 115200 });
-      
+
       portRef.current = newPort;
       setPort(newPort);
       setIsOpen(true);
       addLog('SYS', 'Connected to hardware scanner.');
-      
+
       readLoop(newPort);
     } catch (err) {
       console.error(err);
@@ -83,19 +83,19 @@ export const SerialProvider = ({ children }) => {
     try {
       const students = db.getStudents();
       const student = students.find(s => s.uid === uid);
-      
+
       const config = db.getConfig();
       const now = new Date();
       const today = now.toDateString();
-      
+
       let action = 'UNKNOWN\n';
       let scanType = 'UNKNOWN';
-      
+
       if (student) {
         // Prevent duplicate scans for the same day
         const logs = db.getAttendance();
         const hasTappedIn = logs.some(l => l.studentUid === student.uid && new Date(l.timestamp).toDateString() === today);
-        
+
         if (hasTappedIn) {
           action = `MSG:${student.name},${student.parentEmail},ALREADY_IN\n`;
           scanType = 'DUPLICATE';
@@ -105,7 +105,7 @@ export const SerialProvider = ({ children }) => {
           const [startHour, startMin] = config.schoolStartTime.split(':').map(Number);
           const isLate = (now.getHours() > startHour) || (now.getHours() === startHour && now.getMinutes() > startMin);
           const status = isLate ? 'LATE' : 'ON_TIME';
-          
+
           const newLog = {
             id: Date.now().toString(),
             studentUid: student.uid,
@@ -114,43 +114,13 @@ export const SerialProvider = ({ children }) => {
             timestamp: now.toISOString(),
             status: status
           };
-          
+
           scanType = 'SUCCESS';
           db.addAttendanceLog(newLog);
           action = `MSG:${student.name},${student.parentEmail},${status}\n`;
-          
+
           // Trigger EmailJS Email
-          const scanTimeFormatted = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ', ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          
-          const emailParams = status === 'ON_TIME' ? {
-            timeLabel: 'SCAN TIME',
-            statusLabel: 'On Time',
-            statusColor: '#1f9d7c',
-            statusIconColor: '#0e2a22',
-            statusIcon: '✓',
-            eyebrowText: 'Scan Confirmed',
-            headerSub: 'Checked in on time',
-            messageVerb: 'has checked in on time at the school gate',
-            noteBg: '#f4f1ea',
-            noteTextColor: '#8a93a8',
-            noteText: 'No action needed — this is just a quick confirmation for your records. Questions about attendance can go to the school administration office anytime.',
-            ctaTextColor: '#ffffff',
-            ctaLabel: 'Contact School Admin →'
-          } : {
-            timeLabel: 'SCAN TIME',
-            statusLabel: 'Late',
-            statusColor: '#e8a33d',
-            statusIconColor: '#151b30',
-            statusIcon: '!',
-            eyebrowText: 'Late Arrival Flagged',
-            headerSub: 'Checked in late',
-            messageVerb: 'has checked in late at the school gate',
-            noteBg: '#f4f1ea',
-            noteTextColor: '#8a93a8',
-            noteText: "Repeated late arrivals can affect your child's attendance record. If there's something we should know, please let the school administration office know.",
-            ctaTextColor: '#151b30',
-            ctaLabel: 'Contact School Admin →'
-          };
+          const statusText = status === 'LATE' ? 'arrived late' : 'arrived on time';
 
           emailjs.send(
             import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -158,23 +128,23 @@ export const SerialProvider = ({ children }) => {
             {
               studentName: student.name,
               parentEmail: student.parentEmail,
-              scanTime: scanTimeFormatted,
-              ...emailParams
+              statusText: statusText,
+              scanTime: now.toLocaleTimeString()
             },
             import.meta.env.VITE_EMAILJS_PUBLIC_KEY
           ).then((result) => {
-              console.log('Email successfully sent!', result.text);
+            console.log('Email successfully sent!', result.text);
           }, (error) => {
-              console.error('Failed to send email:', error.text);
+            console.error('Failed to send email:', error.text);
           });
         }
       }
-      
+
       writeToSerial(action);
-      
+
       // Notify the UI about the exact scan result
       window.dispatchEvent(new CustomEvent('scanResult', { detail: { type: scanType, uid } }));
-      
+
       // If it's unknown, automatically redirect to register page after showing the red animation
       if (scanType === 'UNKNOWN') {
         setTimeout(() => {
@@ -191,7 +161,7 @@ export const SerialProvider = ({ children }) => {
     const textDecoder = new TextDecoderStream();
     const readableStreamClosed = activePort.readable.pipeTo(textDecoder.writable);
     readerRef.current = textDecoder.readable.getReader();
-    
+
     let buffer = '';
 
     try {
@@ -205,8 +175,8 @@ export const SerialProvider = ({ children }) => {
           buffer += value;
           let lines = buffer.split('\n');
           // Keep the last part as buffer if it didn't end with a newline
-          buffer = lines.pop(); 
-          
+          buffer = lines.pop();
+
           for (let line of lines) {
             line = line.trim();
             if (line) {
@@ -232,4 +202,32 @@ export const SerialProvider = ({ children }) => {
       {children}
     </SerialContext.Provider>
   );
+};
+buffer = lines.pop();
+
+for (let line of lines) {
+  line = line.trim();
+  if (line) {
+    addLog('RX', line);
+    if (line.startsWith('UID:')) {
+      const uid = line.substring(4);
+      handleScan(uid);
+    }
+  }
+}
+        }
+      }
+    } catch (error) {
+  console.error("Serial read error:", error);
+  addLog('ERROR', 'Read error: ' + error.message);
+} finally {
+  disconnect();
+}
+  };
+
+return (
+  <SerialContext.Provider value={{ port, isOpen, connect, disconnect, writeToSerial, serialLogs, setSerialLogs }}>
+    {children}
+  </SerialContext.Provider>
+);
 };

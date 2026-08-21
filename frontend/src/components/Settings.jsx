@@ -10,7 +10,7 @@ const Settings = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
-  
+
   const { isOpen, connect, disconnect, writeToSerial, serialLogs, setSerialLogs } = useSerial();
 
   useEffect(() => {
@@ -32,36 +32,21 @@ const Settings = () => {
         const students = db.getStudents();
         const logs = db.getAttendance();
         const today = new Date().toDateString();
-        
+
         const absentStudents = students.filter(student => {
           return !logs.some(log => log.studentUid === student.uid && new Date(log.timestamp).toDateString() === today);
         });
 
         for (const student of absentStudents) {
           if (student.parentEmail) {
-             const now = new Date();
-             const scanTimeFormatted = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ', ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-             
-             await emailjs.send(
+            await emailjs.send(
               import.meta.env.VITE_EMAILJS_SERVICE_ID,
               import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
               {
                 studentName: student.name,
                 parentEmail: student.parentEmail,
-                scanTime: scanTimeFormatted,
-                timeLabel: 'RECORDED AT',
-                statusLabel: 'Absent',
-                statusColor: '#c0392b',
-                statusIconColor: '#3a0f0e',
-                statusIcon: '✕',
-                eyebrowText: 'Absence Recorded',
-                headerSub: 'Marked absent today',
-                messageVerb: 'was marked absent — no gate scan was recorded today',
-                noteBg: '#fbe9e7',
-                noteTextColor: '#8a4640',
-                noteText: 'If this is unexpected, please contact the school administration office as soon as possible.',
-                ctaTextColor: '#ffffff',
-                ctaLabel: 'Contact School Admin Now →'
+                statusText: 'been marked absent',
+                scanTime: new Date().toLocaleTimeString()
               },
               import.meta.env.VITE_EMAILJS_PUBLIC_KEY
             ).catch(err => console.error("Failed to email absent student:", err));
@@ -125,7 +110,7 @@ const Settings = () => {
 
       <div className="max-w-2xl">
         <form onSubmit={handleSave} className="space-y-6">
-          
+
           <div className="glass-card overflow-hidden">
             <div className="p-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center gap-2">
               <Clock size={18} className="text-emerald-400" />
@@ -135,11 +120,11 @@ const Settings = () => {
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">School Start Time</label>
                 <p className="text-xs text-slate-500 mb-2">Students arriving after this time will be marked as "LATE".</p>
-                <input 
-                  type="time" 
+                <input
+                  type="time"
                   className="input-field w-full md:w-1/2"
                   value={config.schoolStartTime}
-                  onChange={e => setConfig({...config, schoolStartTime: e.target.value})}
+                  onChange={e => setConfig({ ...config, schoolStartTime: e.target.value })}
                   required
                 />
               </div>
@@ -155,11 +140,11 @@ const Settings = () => {
               <p className="text-sm text-slate-400 mb-4">
                 Connect directly to your hardware scanner using the Chrome USB interface. Keep this tab open to process attendance.
               </p>
-              
+
               <div className="flex items-end gap-3 mb-4">
-                <button 
-                  type="button" 
-                  onClick={isOpen ? disconnect : connect} 
+                <button
+                  type="button"
+                  onClick={isOpen ? disconnect : connect}
                   className={`flex-1 h-[42px] flex items-center justify-center gap-2 font-medium transition-colors ${isOpen ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'} rounded-lg`}
                 >
                   <Usb size={18} />
@@ -173,14 +158,14 @@ const Settings = () => {
                   <span className={`relative inline-flex rounded-full h-3 w-3 ${isOpen ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
                 </span>
                 <span className="text-slate-300 text-sm font-medium tracking-wide">
-                  {isOpen 
-                    ? `Connected & Listening` 
+                  {isOpen
+                    ? `Connected & Listening`
                     : 'Disconnected'}
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div className="glass-card overflow-hidden">
             <div className="p-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -215,18 +200,18 @@ const Settings = () => {
                 <AlertTriangle size={16} className="text-yellow-500" />
                 Warning: These actions are irreversible and will permanently delete data from the system.
               </p>
-              
+
               <div className="flex gap-4">
-                <button 
-                  type="button" 
-                  onClick={resetAttendance} 
+                <button
+                  type="button"
+                  onClick={resetAttendance}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg transition-colors text-sm font-medium"
                 >
                   Reset Attendance (Send Absent Emails)
                 </button>
-                <button 
-                  type="button" 
-                  onClick={clearStudents} 
+                <button
+                  type="button"
+                  onClick={clearStudents}
                   className="px-4 py-2 bg-red-900/50 hover:bg-red-800/80 text-red-200 border border-red-800 rounded-lg transition-colors text-sm font-medium"
                 >
                   Delete All Students
@@ -242,8 +227,8 @@ const Settings = () => {
             {saveStatus === 'error' && (
               <span className="text-red-400 text-sm">Failed to save settings.</span>
             )}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn-primary flex items-center gap-2"
               disabled={isSaving}
             >
@@ -254,6 +239,16 @@ const Settings = () => {
         </form>
       </div>
     </div>
+  );
+};
+
+export default Settings;
+{ isSaving ? 'Saving...' : 'Save Settings' }
+            </button >
+          </div >
+        </form >
+      </div >
+    </div >
   );
 };
 
